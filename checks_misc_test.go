@@ -50,7 +50,6 @@ func TestCheckPtr(t *testing.T) {
 
 }
 
-// TODO check ip
 func TestCheckIp(t *testing.T) {
 	type set struct {
 		ip    net.IP
@@ -97,127 +96,61 @@ func TestCheckIp(t *testing.T) {
 	}
 }
 
-func TestCheckWord(t *testing.T) {
+func TestCheckA(t *testing.T) {
 	type set struct {
 		ip     net.IP
 		domain string
-		word   string
-		expHit bool
-		expRes Result
+		prefix int
+		hit    bool
 	}
 	tests := []set{
-		// v=spf1
-		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"v=spf1",
-			false,
-			ResultPass,
-		},
-
-		// all
-		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"all",
-			true,
-			ResultPass,
-		},
-		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"all:",
-			false,
-			ResultPass,
-		},
-
-		// ptr
 		{
 			net.ParseIP("74.6.231.20"),
 			"yahoo.com",
-			"ptr",
+			-1,
 			true,
-			ResultPass,
+		},
+		{
+			net.ParseIP("2001:4998:24:120d::1:1"),
+			"yahoo.com",
+			-1,
+			true,
 		},
 		{
 			net.ParseIP("0.0.0.0"),
 			"yahoo.com",
-			"ptr",
+			-1,
 			false,
-			ResultPass,
 		},
 		{
-			net.ParseIP("74.6.231.20"),
-			"irrelevant",
-			"ptr:yahoo.com",
+			net.ParseIP("74.6.123.45"),
+			"yahoo.com",
+			16,
 			true,
-			ResultPass,
 		},
 		{
-			net.ParseIP("0.0.0.0"),
-			"irrelevant",
-			"ptr:yahoo.com",
-			false,
-			ResultPass,
-		},
-
-		// exists
-		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"exists:google.com",
+			net.ParseIP("2001:4998:124:1507::f000"),
+			"yahoo.com",
+			32,
 			true,
-			ResultPass,
 		},
 		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"exists:bad",
+			net.ParseIP("74.5.123.45"),
+			"yahoo.com",
+			16,
 			false,
-			ResultPass,
 		},
 		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"exists",
+			net.ParseIP("2002:4998:124:1507::f000"),
+			"yahoo.com",
+			32,
 			false,
-			ResultPass,
-		},
-
-		// invalid word
-		{
-			net.ParseIP("1.2.3.4"),
-			"irrelevant",
-			"badword",
-			false,
-			ResultPass,
 		},
 	}
 	for _, test := range tests {
-		hit, res := checkWord(
-			test.ip,
-			test.domain,
-			test.word,
-		)
-		if hit != test.expHit {
-			t.Fatalf(
-				"Expected hit=%t on checkWord(%s, %s, %s), got hit=%t",
-				test.expHit,
-				test.ip,
-				test.domain,
-				test.word,
-				hit,
-			)
-		} else if hit && res != test.expRes {
-			t.Fatalf(
-				"Expected res=%#v on checkWord(%s, %s, %s), got res=%#v",
-				test.expRes,
-				test.ip,
-				test.domain,
-				test.word,
-				res,
-			)
+		hit := checkA(test.ip, test.domain, test.prefix)
+		if hit != test.hit {
+			t.Fatalf("Got checkA(%s, %s %d)=%t, wanted %t", test.ip, test.domain, test.prefix, hit, test.hit)
 		}
 	}
-
 }
