@@ -83,6 +83,15 @@ func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
 	return
 }
 
+// Checks that a sender ip has permission to send mail from a domain
+//
+// Parameters:
+// 	ip: the net.IP of the sender (either ip6 or ip4)
+// 	domain: the claimed domain of the sender (ex 'colorado.edu' if mail is from 'bob@colorado.edu )
+//
+// Returns:
+// 	res: the Result enum (see README for all possible results)
+// 	err: and error object, only relevant if res = ResultPermError or ResultTempError
 func CheckHost(ip net.IP, domain string) (res Result, err error) {
 	records, err := fetchSpfRecords(domain)
 	if err != nil {
