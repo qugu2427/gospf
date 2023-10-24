@@ -6,17 +6,17 @@ import (
 )
 
 func TestCheckWord(t *testing.T) {
-	type set struct {
-		ip     net.IP
+	type expected struct {
+		ip     string
 		domain string
 		word   string
-		expHit bool
-		expRes Result
+		hit    bool
+		res    Result
 	}
-	tests := []set{
+	tests := []expected{
 		// v=spf1
 		{
-			net.ParseIP("1.2.3.4"),
+			"1.2.3.4",
 			"irrelevant.com",
 			"v=spf1",
 			false,
@@ -25,7 +25,7 @@ func TestCheckWord(t *testing.T) {
 
 		// all
 		{
-			net.ParseIP("1.2.3.4"),
+			"1.2.3.4",
 			"irrelevant.com",
 			"all",
 			true,
@@ -33,29 +33,29 @@ func TestCheckWord(t *testing.T) {
 		},
 
 		// ip4
-		{
-			net.ParseIP("74.6.231.20"),
+		{ // positive specific ip4
+			"74.6.231.20",
 			"yahoo.com",
 			"ip4:74.6.231.20",
 			true,
 			ResultPass,
 		},
-		{
-			net.ParseIP("74.6.128.10"),
-			"yahoo.com",
-			"ip4:74.6.231.20/16",
-			true,
-			ResultPass,
-		},
-		{
-			net.ParseIP("1.2.3.4"),
+		{ // negative specific ip4
+			"1.2.3.4",
 			"yahoo.com",
 			"ip4:74.6.231.20",
 			false,
 			ResultPass,
 		},
-		{
-			net.ParseIP("74.3.128.10"),
+		{ // positive ranged ip4
+			"74.6.128.10",
+			"yahoo.com",
+			"ip4:74.6.231.20/16",
+			true,
+			ResultPass,
+		},
+		{ // negative ranged ip4
+			"74.3.128.10",
 			"yahoo.com",
 			"ip4:74.6.231.20/16",
 			false,
@@ -63,38 +63,57 @@ func TestCheckWord(t *testing.T) {
 		},
 
 		// ip6
-		{
-			net.ParseIP("2001:4998:24:120d::1:1"),
+		{ // positive specific ip6
+			"2001:4998:24:120d::1:1",
 			"yahoo.com",
 			"ip6:2001:4998:24:120d::1:1",
 			true,
 			ResultPass,
 		},
+		{ // negative specific ip6
+			"2001:4998:25:120d::1:1",
+			"yahoo.com",
+			"ip6:2001:4998:24:120d::1:1",
+			false,
+			ResultPass,
+		},
+		// TODO positive ranged ip6
+		// TODO negative ranged ip6
+
+		// a
+		// TODO positive implied a
+		// TODO negative implied a
+		// TODO positive ranged a
+		// TODO negative ranged a
+		// TODO positive domain a
+		// TODO negative domain a
+		// TODO positive domain ranged a
+		// TODO negative domain ranged a
 
 		// ptr
-		{
-			net.ParseIP("74.6.231.20"),
+		{ // positive implied ptr
+			"74.6.231.20",
 			"yahoo.com",
 			"ptr",
 			true,
 			ResultPass,
 		},
-		{
-			net.ParseIP("0.0.0.0"),
+		{ // negative implied ptr
+			"0.0.0.0",
 			"yahoo.com",
 			"ptr",
 			false,
 			ResultPass,
 		},
-		{
-			net.ParseIP("74.6.231.20"),
-			"irrelevant",
+		{ // positive specified ptr
+			"74.6.231.20",
+			"irrelevant.com",
 			"ptr:yahoo.com",
 			true,
 			ResultPass,
 		},
-		{
-			net.ParseIP("0.0.0.0"),
+		{ // negative specified ptr
+			"0.0.0.0",
 			"irrelevant",
 			"ptr:yahoo.com",
 			false,
@@ -102,22 +121,29 @@ func TestCheckWord(t *testing.T) {
 		},
 
 		// exists
-		{
-			net.ParseIP("1.2.3.4"),
+		{ // positive exists
+			"1.2.3.4",
 			"irrelevant",
 			"exists:google.com",
 			true,
 			ResultPass,
 		},
-		{
-			net.ParseIP("1.2.3.4"),
+		{ // negative exists (non existent domain)
+			"1.2.3.4",
+			"irrelevant",
+			"exists:spf.thisdomainistotallyfake.gov",
+			false,
+			ResultPermError,
+		},
+		{ // negative exists (invalid domain format)
+			"1.2.3.4",
 			"irrelevant",
 			"exists:bad",
 			true,
 			ResultPermError,
 		},
-		{
-			net.ParseIP("1.2.3.4"),
+		{ // negative exists (no domain specified)
+			"1.2.3.4",
 			"irrelevant",
 			"exists",
 			true,
@@ -126,37 +152,37 @@ func TestCheckWord(t *testing.T) {
 
 		// invalid word
 		{
-			net.ParseIP("1.2.3.4"),
+			"1.2.3.4",
 			"irrelevant.com",
 			"invalidword",
 			true,
 			ResultPermError,
 		},
 	}
-	for _, test := range tests {
+	for _, expected := range tests {
 		hit, res, _ := checkWord(
-			test.ip,
-			test.domain,
-			test.word,
+			net.ParseIP(expected.ip),
+			expected.domain,
+			expected.word,
 			[]string{},
 		)
-		if hit != test.expHit {
+		if hit != expected.hit {
 			t.Fatalf(
-				"Expected hit=%t on checkWord(%s, %s, %s), got hit=%t",
-				test.expHit,
-				test.ip,
-				test.domain,
-				test.word,
+				"checkWord(%s, %s, %s).hit=%t, expected %t",
+				expected.ip,
+				expected.domain,
+				expected.word,
 				hit,
+				expected.hit,
 			)
-		} else if hit && res != test.expRes {
+		} else if hit && res != expected.res {
 			t.Fatalf(
-				"Expected res=%#v on checkWord(%s, %s, %s), got res=%#v",
-				test.expRes,
-				test.ip,
-				test.domain,
-				test.word,
+				"checkWord(%s, %s, %s).res=%#v, expected %#v",
+				expected.ip,
+				expected.domain,
+				expected.word,
 				res,
+				expected.res,
 			)
 		}
 	}

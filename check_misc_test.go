@@ -18,180 +18,180 @@ func TestCheckExists(t *testing.T) {
 	for domain, expected := range domains {
 		got := checkExists(domain)
 		if got != expected {
-			t.Fatalf("Got domain=%s exists=%t, expected exists=%t", domain, got, expected)
+			t.Fatalf("Got checkExists(%s)=%t, expected %t", domain, got, expected)
 		}
 	}
 }
 
 func TestCheckPtr(t *testing.T) {
-	type set struct {
-		ip     net.IP
+	type expected struct {
+		ip     string
 		domain string
 		hit    bool
 	}
-	tests := []set{
+	tests := []expected{
 		{
-			net.ParseIP("74.6.143.26"),
+			"74.6.143.26",
 			"yahoo.com",
 			true,
 		},
 		{
-			net.ParseIP("74.6.143.26"),
+			"74.6.143.26",
 			"google.com",
 			false,
 		},
 	}
-	for _, exp := range tests {
-		hit := checkPtr(exp.ip, exp.domain)
-		if hit != exp.hit {
-			t.Fatalf("Expected ptr checkPtr(%s, %s) to result in hit=%t, but got hit=%t", exp.ip, exp.domain, exp.hit, hit)
+	for _, expected := range tests {
+		hit := checkPtr(net.ParseIP(expected.ip), expected.domain)
+		if hit != expected.hit {
+			t.Fatalf("Got checkPtr(%s, %s)=%t, expected %t", expected.ip, expected.domain, hit, expected.hit)
 		}
 	}
 
 }
 
 func TestCheckIp(t *testing.T) {
-	type set struct {
-		ip    net.IP
+	type expected struct {
+		ip    string
 		ipStr string
 		hit   bool
 	}
-	tests := []set{
+	tests := []expected{
 		{
-			net.ParseIP("192.168.1.10"),
+			"192.168.1.10",
 			"192.168.1.0/24",
 			true,
 		},
 		{
-			net.ParseIP("10.0.0.5"),
+			"10.0.0.5",
 			"10.0.0.0/8",
 			true,
 		},
 		{
-			net.ParseIP("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+			"2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 			"2001:0db8::/32",
 			true,
 		},
 		{
-			net.ParseIP("2606:4700:3037::6815:6438"),
+			"2606:4700:3037::6815:6438",
 			"2606:4700:3037::/48",
 			true,
 		},
 		{
-			net.ParseIP("192.168.1.10"),
+			"192.168.1.10",
 			"10.0.0.0/8",
 			false,
 		},
 		{
-			net.ParseIP("2606:4700:3037::6815:6438"),
+			"2606:4700:3037::6815:6438",
 			"1.2.3.4",
 			false,
 		},
 	}
-	for _, exp := range tests {
-		hit := checkIp(exp.ip, exp.ipStr)
-		if exp.hit != hit {
-			t.Fatalf("Got checkIp(%s, %s)=%t, wanted %t", exp.ip, exp.ipStr, exp.hit, hit)
+	for _, expected := range tests {
+		hit := checkIp(net.ParseIP(expected.ip), expected.ipStr)
+		if expected.hit != hit {
+			t.Fatalf("Got checkIp(%s, %s)=%t, expected %t", expected.ip, expected.ipStr, hit, expected.hit)
 		}
 	}
 }
 
 func TestCheckA(t *testing.T) {
-	type set struct {
-		ip     net.IP
+	type expected struct {
+		ip     string
 		domain string
 		prefix int
 		hit    bool
 	}
-	tests := []set{
+	tests := []expected{
 		{
-			net.ParseIP("74.6.231.20"),
+			"74.6.231.20",
 			"yahoo.com",
 			-1,
 			true,
 		},
 		{
-			net.ParseIP("2001:4998:24:120d::1:1"),
+			"2001:4998:24:120d::1:1",
 			"yahoo.com",
 			-1,
 			true,
 		},
 		{
-			net.ParseIP("0.0.0.0"),
+			"0.0.0.0",
 			"yahoo.com",
 			-1,
 			false,
 		},
 		{
-			net.ParseIP("74.6.123.45"),
+			"74.6.123.45",
 			"yahoo.com",
 			16,
 			true,
 		},
 		{
-			net.ParseIP("2001:4998:124:1507::f000"),
+			"2001:4998:124:1507::f000",
 			"yahoo.com",
 			32,
 			true,
 		},
 		{
-			net.ParseIP("74.5.123.45"),
+			"74.5.123.45",
 			"yahoo.com",
 			16,
 			false,
 		},
 		{
-			net.ParseIP("2002:4998:124:1507::f000"),
+			"2002:4998:124:1507::f000",
 			"yahoo.com",
 			32,
 			false,
 		},
 	}
-	for _, test := range tests {
-		hit := checkA(test.ip, test.domain, test.prefix)
-		if hit != test.hit {
-			t.Fatalf("Got checkA(%s, %s %d)=%t, wanted %t", test.ip, test.domain, test.prefix, hit, test.hit)
+	for _, expected := range tests {
+		hit := checkA(net.ParseIP(expected.ip), expected.domain, expected.prefix)
+		if hit != expected.hit {
+			t.Fatalf("Got checkA(%s, %s %d)=%t, expected %t", expected.ip, expected.domain, expected.prefix, hit, expected.hit)
 		}
 	}
 }
 
 func TestCheckMx(t *testing.T) {
-	type set struct {
-		ip     net.IP
+	type expected struct {
+		ip     string
 		domain string
 		prefix int
 		hit    bool
 	}
-	tests := []set{
+	tests := []expected{
 		{
-			net.ParseIP("67.195.228.110"),
+			"67.195.228.110",
 			"yahoo.com",
 			-1,
 			true,
 		},
 		{
-			net.ParseIP("0.0.0.0"),
+			"0.0.0.0",
 			"yahoo.com",
 			-1,
 			false,
 		},
 		{
-			net.ParseIP("67.195.228.0"),
+			"67.195.228.0",
 			"yahoo.com",
 			24,
 			true,
 		},
 		{
-			net.ParseIP("67.195.227.0"),
+			"67.195.227.0",
 			"yahoo.com",
 			24,
 			false,
 		},
 	}
-	for _, test := range tests {
-		hit := checkMx(test.ip, test.domain, test.prefix)
-		if hit != test.hit {
-			t.Fatalf("Got checkMx(%s, %s %d)=%t, wanted %t", test.ip, test.domain, test.prefix, hit, test.hit)
+	for _, expected := range tests {
+		hit := checkMx(net.IP(expected.ip), expected.domain, expected.prefix)
+		if hit != expected.hit {
+			t.Fatalf("Got checkMx(%s, %s %d)=%t, expected %t", expected.ip, expected.domain, expected.prefix, hit, expected.hit)
 		}
 	}
 }
