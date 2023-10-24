@@ -27,3 +27,15 @@ func getQualifierResult(word string) Result {
 	}
 	return ResultPass
 }
+
+func hasDuplicateDomain(domainsVisited []string, domain string) bool {
+	isFound := false
+	for _, d := range domainsVisited {
+		if d == domain && isFound {
+			return true
+		} else if d == domain {
+			isFound = true
+		}
+	}
+	return false
+}

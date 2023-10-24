@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
+func checkWord(ip net.IP, domain, word string, domainsVisited []string) (hit bool, res Result, err error) {
 	res = getQualifierResult(word)
 	switch {
 	case RgxSpf.MatchString(word): // v=spf1
@@ -19,10 +19,10 @@ func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
 	case RgxIp4Prefixed.MatchString(word): // ip4:<ip>/<prefix>
 		ipStr := word[4:]
 		hit = checkIp(ip, ipStr)
-	case RgxIp6.MatchString(word):
+	case RgxIp6.MatchString(word): // ip6:<domain>
 		ipStr := word[4:]
 		hit = checkIp(ip, ipStr)
-	case RgxIp6Prefixed.MatchString(word):
+	case RgxIp6Prefixed.MatchString(word): // ip6:<domain>/<prefix>
 		ipStr := word[4:]
 		hit = checkIp(ip, ipStr)
 	case RgxA.MatchString(word): // a
@@ -45,14 +45,14 @@ func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
 		} else {
 			hit = checkA(ip, word[3:slashIndex], prefix)
 		}
-	case RgxMx.MatchString(word):
-		hit = checkMx(ip, domain, -1) // mx
+	case RgxMx.MatchString(word): // mx
+		hit = checkMx(ip, domain, -1)
 	case RgxMxPrefix.MatchString(word): // mx/<prefix>
 		prefix, err := strconv.Atoi(word[3:])
 		if err != nil {
 			hit = false
 		} else {
-			hit = checkA(ip, domain, prefix)
+			hit = checkMx(ip, domain, prefix)
 		}
 	case RgxMxDomainPrefix.MatchString(word): // mx:domain/<prefix>
 		slashIndex := strings.Index(word, "/")
@@ -60,7 +60,7 @@ func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
 		if err != nil {
 			hit = false
 		} else {
-			hit = checkA(ip, word[3:slashIndex], prefix)
+			hit = checkMx(ip, word[3:slashIndex], prefix)
 		}
 	case RgxPtr.MatchString(word): // ptr
 		hit = checkPtr(ip, domain)
@@ -70,42 +70,20 @@ func checkWord(ip net.IP, domain, word string) (hit bool, res Result) {
 	case RgxExists.MatchString(word): // exists:<domain>
 		domain = word[7:]
 		hit = checkExists(domain)
-	case RgxInclude.MatchString(word): // include:<comain>
-		// pass
+	case RgxInclude.MatchString(word): // include:<domain>
+		includeDomain := word[8:]
+		res, err = checkHostInner(ip, domain, append(domainsVisited, includeDomain))
 	case RgxRedirect.MatchString(word): // redirect=<domain>
-		// pass
+		redirectDomain := word[9:]
+		res, err = checkHostInner(ip, domain, append(domainsVisited, redirectDomain))
 	case RgxExp.MatchString(word): // exp=<domain>
+		hit = false
 		// pass
+	case strings.Contains(word, "="): // unknown modifier
+		hit = false
 	default:
 		hit = true
 		res = ResultPermError
 	}
-	return
-}
-
-// Checks that a sender ip has permission to send mail from a domain
-//
-// Parameters:
-// 	ip: the net.IP of the sender (either ip6 or ip4)
-// 	domain: the claimed domain of the sender (ex 'colorado.edu' if mail is from 'bob@colorado.edu )
-//
-// Returns:
-// 	res: the Result enum (see README for all possible results)
-// 	err: and error object, only relevant if res = ResultPermError or ResultTempError
-func CheckHost(ip net.IP, domain string) (res Result, err error) {
-	records, err := fetchSpfRecords(domain)
-	if err != nil {
-		return ResultPermError, err
-	}
-	for _, record := range records {
-		words := strings.Split(record, " ")
-		for _, word := range words {
-			hit, res := checkWord(ip, domain, word)
-			if hit {
-				return res, err
-			}
-		}
-	}
-	res = ResultNone
 	return
 }

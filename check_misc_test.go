@@ -154,3 +154,44 @@ func TestCheckA(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckMx(t *testing.T) {
+	type set struct {
+		ip     net.IP
+		domain string
+		prefix int
+		hit    bool
+	}
+	tests := []set{
+		{
+			net.ParseIP("67.195.228.110"),
+			"yahoo.com",
+			-1,
+			true,
+		},
+		{
+			net.ParseIP("0.0.0.0"),
+			"yahoo.com",
+			-1,
+			false,
+		},
+		{
+			net.ParseIP("67.195.228.0"),
+			"yahoo.com",
+			24,
+			true,
+		},
+		{
+			net.ParseIP("67.195.227.0"),
+			"yahoo.com",
+			24,
+			false,
+		},
+	}
+	for _, test := range tests {
+		hit := checkMx(test.ip, test.domain, test.prefix)
+		if hit != test.hit {
+			t.Fatalf("Got checkMx(%s, %s %d)=%t, wanted %t", test.ip, test.domain, test.prefix, hit, test.hit)
+		}
+	}
+}

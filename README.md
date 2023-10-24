@@ -36,3 +36,6 @@ switch result {
 }
 ```
 
+# Things to keep in mind
+- The security of SPF relies on the sender domain having a correctly formatted spf record.
+- Spf IS NOT the only measure needed verify an email.

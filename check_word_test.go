@@ -134,10 +134,11 @@ func TestCheckWord(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		hit, res := checkWord(
+		hit, res, _ := checkWord(
 			test.ip,
 			test.domain,
 			test.word,
+			[]string{},
 		)
 		if hit != test.expHit {
 			t.Fatalf(
