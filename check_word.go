@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
 )
 
 func checkWord(ip net.IP, domain, word string, domainsVisited []string) (hit bool, res Result, err error) {
+	fmt.Printf("[DEBUG] %#v -> ", word)
 	res = getQualifierResult(word)
 	switch {
 	case RgxSpf.MatchString(word): // v=spf1
@@ -75,6 +77,7 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (hit boo
 		res, err = checkHostInner(ip, domain, append(domainsVisited, includeDomain))
 	case RgxRedirect.MatchString(word): // redirect=<domain>
 		redirectDomain := word[9:]
+		fmt.Println(redirectDomain)
 		res, err = checkHostInner(ip, domain, append(domainsVisited, redirectDomain))
 	case RgxExp.MatchString(word): // exp=<domain>
 		hit = false
@@ -85,5 +88,6 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (hit boo
 		hit = true
 		res = ResultPermError
 	}
+	fmt.Printf("%t %#v\n", hit, res)
 	return
 }

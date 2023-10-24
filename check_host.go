@@ -7,6 +7,7 @@ import (
 )
 
 func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Result, err error) {
+	fmt.Printf("[DEBUG] calling checkhostinner on %s\n", domain)
 
 	// Make sure we are not stuck in a loop or bottomless spf search
 	if hasDuplicateDomain(domainsVisited, domain) {
@@ -20,6 +21,7 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 	}
 
 	records, err := fetchSpfRecords(domain)
+	fmt.Printf("[DEBUG] %#v\n", records)
 	if err != nil {
 		return ResultPermError, err
 	}
@@ -47,5 +49,6 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 // 	res: the Result enum (see README for all possible results)
 // 	err: and error object, only relevant if res = ResultPermError or ResultTempError
 func CheckHost(ip net.IP, domain string) (res Result, err error) {
+	fmt.Printf("[DEBUG] calling checkhost on %s\n", domain)
 	return checkHostInner(ip, domain, []string{})
 }
