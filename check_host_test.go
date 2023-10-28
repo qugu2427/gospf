@@ -22,11 +22,21 @@ func TestCheckHost(t *testing.T) {
 			"gmail.com",
 			ResultPass,
 		},
+		{
+			"13.110.224.0",
+			"colorado.edu",
+			ResultPass,
+		},
+		{
+			"0.0.0.0",
+			"colorado.edu",
+			ResultSoftFail,
+		},
 	}
 	for _, expected := range tests {
 		res, err := CheckHost(net.ParseIP(expected.ip), expected.domain)
 		if res != expected.res {
-			t.Fatalf("Got checkHost(%s, %s)=%#v, expected %#v (err: %s)", expected.ip, expected.domain, res, expected.res, err)
+			t.Fatalf("Got checkHost(%s, %s)=%s, expected %s (err: %s)", expected.ip, expected.domain, resultToStr(res), resultToStr(expected.res), err)
 		}
 	}
 }

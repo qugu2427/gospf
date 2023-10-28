@@ -2,8 +2,10 @@ package spf
 
 type Result = uint8
 
-// Results are in order of greatness
-// e.x [ Fail, Fail, Pass, Fail ] = Pass
+/*
+Results are in order of dominance
+e.x [ Fail, ResultPermError, Fail, Pass, ResultNeutral, Fail ] = Pass
+*/
 const (
 	ResultPass uint8 = iota
 	ResultNeutral
@@ -14,6 +16,7 @@ const (
 	ResultNone
 )
 
+// Converts a result enum to a nice string
 func resultToStr(res Result) (str string) {
 	switch res {
 	case ResultPass:
@@ -36,6 +39,7 @@ func resultToStr(res Result) (str string) {
 	return
 }
 
+// Returns most dominant result from slice of results
 func getDominantResult(resArr []Result) (res Result) {
 	res = ResultNone
 	for _, r := range resArr {

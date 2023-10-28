@@ -30,6 +30,7 @@ func fetchSpfRecord(domain string) (spfRecord string, err error) {
 	return
 }
 
+// Determines the qualifier of a word and returns it's results
 func getQualifierResult(word string) Result {
 	switch word[0] {
 	case '-':
