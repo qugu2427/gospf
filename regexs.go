@@ -1,18 +1,6 @@
-package main
+package spf
 
 import "regexp"
-
-type Result = uint8
-
-const (
-	ResultPass uint8 = iota
-	ResultFail
-	ResultSoftFail
-	ResultNeutral
-	ResultNone
-	ResultPermError
-	ResultTempError
-)
 
 var (
 	RgxSpf            *regexp.Regexp = regexp.MustCompile(`^v=spf1`)
@@ -22,17 +10,17 @@ var (
 	RgxIp6            *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?ip6:(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
 	RgxIp6Prefixed    *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?ip6:(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/(?:\d|1[0-1]\d|12[0-8])$`)
 	RgxA              *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a$`)
-	RgxAPrefix        *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a/(?:\d|1[0-1]\d|12[0-8])$`)
+	RgxAPrefix        *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a\/\d{1,3}$`)
 	RgxADomain        *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxADomainPrefix  *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+\/(?:\d|1[0-1]\d|12[0-8])$`)
+	RgxADomainPrefix  *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?a:[a-zA-Z0-9-_\.]+\/\d{1,3}`)
 	RgxMx             *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx$`)
-	RgxMxPrefix       *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx\/(?:\d|1[0-1]\d|12[0-8])$`)
-	RgxMxDomain       *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxMxDomainPrefix *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+\/(?:\d|1[0-1]\d|12[0-8])$`)
+	RgxMxPrefix       *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx\/\d{1,3}$`)
+	RgxMxDomain       *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx:[a-zA-Z0-9-_\.]+`)
+	RgxMxDomainPrefix *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?mx:[a-zA-Z0-9-_\.]+\/\d{1,3}$`)
 	RgxPtr            *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?ptr$`)
-	RgxPtrDomain      *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?ptr:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxExists         *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?exists:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxInclude        *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?include:[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxRedirect       *regexp.Regexp = regexp.MustCompile(`^redirect=[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
-	RgxExp            *regexp.Regexp = regexp.MustCompile(`^exp=[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$`)
+	RgxPtrDomain      *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?ptr:[a-zA-Z0-9-_\.]+$`)
+	RgxExists         *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?exists:[a-zA-Z0-9-_\.]+$`)
+	RgxInclude        *regexp.Regexp = regexp.MustCompile(`^[\+\-~\?]?include:[a-zA-Z0-9-_\.]+$`)
+	RgxRedirect       *regexp.Regexp = regexp.MustCompile(`^redirect=[a-zA-Z0-9-_\.]+$`)
+	RgxExp            *regexp.Regexp = regexp.MustCompile(`^exp=[a-zA-Z0-9-_\.]+$`)
 )

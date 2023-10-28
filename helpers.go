@@ -1,17 +1,31 @@
-package main
+package spf
 
-import "net"
+import (
+	"fmt"
+	"net"
+)
 
-func fetchSpfRecords(domain string) (spfRecords []string, err error) {
+// Gets spf txt record for a given domain
+// only 1 spf record is allowed
+func fetchSpfRecord(domain string) (spfRecord string, err error) {
 	txtRecords, err := net.LookupTXT(domain)
+	hasFoundSpfRecord := false
 	if err != nil {
 		return
 	} else {
 		for _, txtRecord := range txtRecords {
 			if RgxSpf.MatchString(txtRecord) {
-				spfRecords = append(spfRecords, txtRecord)
+				if hasFoundSpfRecord {
+					return "", fmt.Errorf("more than one spf record found for %s", domain)
+				} else {
+					spfRecord = txtRecord
+					hasFoundSpfRecord = true
+				}
 			}
 		}
+	}
+	if !hasFoundSpfRecord {
+		err = fmt.Errorf("no spf record found for %s", domain)
 	}
 	return
 }
@@ -38,4 +52,15 @@ func hasDuplicateDomain(domainsVisited []string, domain string) bool {
 		}
 	}
 	return false
+}
+
+// This is just a way to debug print
+// DEV ONLY
+var shouldDebugPrint bool = false
+
+func dprint(msg string, fmtArgs ...interface{}) {
+	if shouldDebugPrint {
+		str := fmt.Sprintf(msg, fmtArgs...)
+		fmt.Println("[DEBUG] " + str)
+	}
 }

@@ -1,4 +1,4 @@
-package main
+package spf
 
 import (
 	"net"
@@ -10,7 +10,6 @@ func TestCheckWord(t *testing.T) {
 		ip     string
 		domain string
 		word   string
-		hit    bool
 		res    Result
 	}
 	tests := []expected{
@@ -19,8 +18,7 @@ func TestCheckWord(t *testing.T) {
 			"1.2.3.4",
 			"irrelevant.com",
 			"v=spf1",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 
 		// all
@@ -28,7 +26,6 @@ func TestCheckWord(t *testing.T) {
 			"1.2.3.4",
 			"irrelevant.com",
 			"all",
-			true,
 			ResultPass,
 		},
 
@@ -37,29 +34,25 @@ func TestCheckWord(t *testing.T) {
 			"74.6.231.20",
 			"yahoo.com",
 			"ip4:74.6.231.20",
-			true,
 			ResultPass,
 		},
 		{ // negative specific ip4
 			"1.2.3.4",
 			"yahoo.com",
 			"ip4:74.6.231.20",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 		{ // positive ranged ip4
 			"74.6.128.10",
 			"yahoo.com",
 			"ip4:74.6.231.20/16",
-			true,
 			ResultPass,
 		},
 		{ // negative ranged ip4
 			"74.3.128.10",
 			"yahoo.com",
 			"ip4:74.6.231.20/16",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 
 		// ip6
@@ -67,15 +60,13 @@ func TestCheckWord(t *testing.T) {
 			"2001:4998:24:120d::1:1",
 			"yahoo.com",
 			"ip6:2001:4998:24:120d::1:1",
-			true,
 			ResultPass,
 		},
 		{ // negative specific ip6
 			"2001:4998:25:120d::1:1",
 			"yahoo.com",
 			"ip6:2001:4998:24:120d::1:1",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 		// TODO positive ranged ip6
 		// TODO negative ranged ip6
@@ -95,29 +86,25 @@ func TestCheckWord(t *testing.T) {
 			"74.6.231.20",
 			"yahoo.com",
 			"ptr",
-			true,
 			ResultPass,
 		},
 		{ // negative implied ptr
 			"0.0.0.0",
 			"yahoo.com",
 			"ptr",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 		{ // positive specified ptr
 			"74.6.231.20",
 			"irrelevant.com",
 			"ptr:yahoo.com",
-			true,
 			ResultPass,
 		},
 		{ // negative specified ptr
 			"0.0.0.0",
 			"irrelevant",
 			"ptr:yahoo.com",
-			false,
-			ResultPass,
+			ResultNone,
 		},
 
 		// exists
@@ -125,28 +112,18 @@ func TestCheckWord(t *testing.T) {
 			"1.2.3.4",
 			"irrelevant",
 			"exists:google.com",
-			true,
 			ResultPass,
 		},
 		{ // negative exists (non existent domain)
 			"1.2.3.4",
 			"irrelevant",
 			"exists:spf.thisdomainistotallyfake.gov",
-			false,
-			ResultPermError,
+			ResultNone,
 		},
-		{ // negative exists (invalid domain format)
-			"1.2.3.4",
-			"irrelevant",
-			"exists:bad",
-			true,
-			ResultPermError,
-		},
-		{ // negative exists (no domain specified)
+		{ // negative/err exists (no domain specified)
 			"1.2.3.4",
 			"irrelevant",
 			"exists",
-			true,
 			ResultPermError,
 		},
 
@@ -155,34 +132,24 @@ func TestCheckWord(t *testing.T) {
 			"1.2.3.4",
 			"irrelevant.com",
 			"invalidword",
-			true,
 			ResultPermError,
 		},
 	}
 	for _, expected := range tests {
-		hit, res, _ := checkWord(
+		res, _ := checkWord(
 			net.ParseIP(expected.ip),
 			expected.domain,
 			expected.word,
 			[]string{},
 		)
-		if hit != expected.hit {
+		if res != expected.res {
 			t.Fatalf(
-				"checkWord(%s, %s, %s).hit=%t, expected %t",
+				"checkWord(%s, %s, %s).res=%s, expected %s",
 				expected.ip,
 				expected.domain,
 				expected.word,
-				hit,
-				expected.hit,
-			)
-		} else if hit && res != expected.res {
-			t.Fatalf(
-				"checkWord(%s, %s, %s).res=%#v, expected %#v",
-				expected.ip,
-				expected.domain,
-				expected.word,
-				res,
-				expected.res,
+				resultToStr(res),
+				resultToStr(expected.res),
 			)
 		}
 	}

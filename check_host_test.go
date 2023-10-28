@@ -1,4 +1,4 @@
-package main
+package spf
 
 import (
 	"net"
@@ -15,6 +15,11 @@ func TestCheckHost(t *testing.T) {
 		{
 			"74.6.143.26",
 			"yahoo.com",
+			ResultPass,
+		},
+		{
+			"35.191.0.1",
+			"gmail.com",
 			ResultPass,
 		},
 	}

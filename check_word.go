@@ -1,4 +1,4 @@
-package main
+package spf
 
 import (
 	"fmt"
@@ -7,87 +7,94 @@ import (
 	"strings"
 )
 
-func checkWord(ip net.IP, domain, word string, domainsVisited []string) (hit bool, res Result, err error) {
-	fmt.Printf("[DEBUG] %#v -> ", word)
-	res = getQualifierResult(word)
+func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Result, err error) {
+	res = ResultNone
 	switch {
-	case RgxSpf.MatchString(word): // v=spf1
-		hit = false
-	case RgxAll.MatchString(word): // all
-		hit = true
-	case RgxIp4.MatchString(word): // ip4:<ip>
+	case RgxAll.MatchString(word):
+		res = getQualifierResult(word)
+	case RgxIp4.MatchString(word) ||
+		RgxIp4Prefixed.MatchString(word) ||
+		RgxIp6.MatchString(word) ||
+		RgxIp6Prefixed.MatchString(word):
 		ipStr := word[4:]
-		hit = checkIp(ip, ipStr)
-	case RgxIp4Prefixed.MatchString(word): // ip4:<ip>/<prefix>
-		ipStr := word[4:]
-		hit = checkIp(ip, ipStr)
-	case RgxIp6.MatchString(word): // ip6:<domain>
-		ipStr := word[4:]
-		hit = checkIp(ip, ipStr)
-	case RgxIp6Prefixed.MatchString(word): // ip6:<domain>/<prefix>
-		ipStr := word[4:]
-		hit = checkIp(ip, ipStr)
-	case RgxA.MatchString(word): // a
-		hit = checkA(ip, domain, -1)
-	case RgxAPrefix.MatchString(word): // a/<prefix>
-		prefix, err := strconv.Atoi(word[3:])
-		if err != nil {
-			hit = false
+		if checkIp(ip, ipStr) {
+			res = getQualifierResult(word)
 		} else {
-			hit = checkA(ip, domain, prefix)
+			res = ResultNone
+		}
+	case RgxA.MatchString(word):
+		if checkA(ip, domain, -1) {
+			res = getQualifierResult(word)
+		}
+	case RgxAPrefix.MatchString(word):
+		var prefix int
+		prefix, err = strconv.Atoi(word[3:])
+		if err != nil {
+			res = ResultPermError
+		} else if checkA(ip, domain, prefix) {
+			res = getQualifierResult(word)
 		}
 	case RgxADomain.MatchString(word): // a:<domain>
 		domain := word[3:]
-		hit = checkA(ip, domain, -1)
+		if checkA(ip, domain, -1) {
+			res = getQualifierResult(word)
+		}
 	case RgxADomainPrefix.MatchString(word): // a:<domain>/<prefix>
+		var prefix int
 		slashIndex := strings.Index(word, "/")
-		prefix, err := strconv.Atoi(word[slashIndex+1:])
+		prefix, err = strconv.Atoi(word[slashIndex+1:])
 		if err != nil {
-			hit = false
-		} else {
-			hit = checkA(ip, word[3:slashIndex], prefix)
+			res = ResultPermError
+		} else if checkA(ip, word[3:slashIndex], prefix) {
+			res = getQualifierResult(word)
 		}
 	case RgxMx.MatchString(word): // mx
-		hit = checkMx(ip, domain, -1)
+		if checkMx(ip, domain, -1) {
+			res = getQualifierResult(word)
+		}
 	case RgxMxPrefix.MatchString(word): // mx/<prefix>
-		prefix, err := strconv.Atoi(word[3:])
+		var prefix int
+		prefix, err = strconv.Atoi(word[3:])
 		if err != nil {
-			hit = false
-		} else {
-			hit = checkMx(ip, domain, prefix)
+			res = ResultPermError
+		} else if checkMx(ip, domain, prefix) {
+			res = getQualifierResult(word)
 		}
 	case RgxMxDomainPrefix.MatchString(word): // mx:domain/<prefix>
+		var prefix int
 		slashIndex := strings.Index(word, "/")
-		prefix, err := strconv.Atoi(word[slashIndex+1:])
+		prefix, err = strconv.Atoi(word[slashIndex+1:])
 		if err != nil {
-			hit = false
-		} else {
-			hit = checkMx(ip, word[3:slashIndex], prefix)
+			res = ResultPermError
+		} else if checkMx(ip, word[3:slashIndex], prefix) {
+			res = getQualifierResult(word)
 		}
 	case RgxPtr.MatchString(word): // ptr
-		hit = checkPtr(ip, domain)
+		if checkPtr(ip, domain) {
+			res = getQualifierResult(word)
+		}
 	case RgxPtrDomain.MatchString(word): // ptr:<domain>
 		domain = word[4:]
-		hit = checkPtr(ip, domain)
+		if checkPtr(ip, domain) {
+			res = getQualifierResult(word)
+		}
 	case RgxExists.MatchString(word): // exists:<domain>
 		domain = word[7:]
-		hit = checkExists(domain)
+		if checkExists(domain) {
+			res = getQualifierResult(word)
+		}
 	case RgxInclude.MatchString(word): // include:<domain>
 		includeDomain := word[8:]
-		res, err = checkHostInner(ip, domain, append(domainsVisited, includeDomain))
+		res, err = checkHostInner(ip, includeDomain, append(domainsVisited, includeDomain))
 	case RgxRedirect.MatchString(word): // redirect=<domain>
 		redirectDomain := word[9:]
-		fmt.Println(redirectDomain)
-		res, err = checkHostInner(ip, domain, append(domainsVisited, redirectDomain))
+		res, err = checkHostInner(ip, redirectDomain, append(domainsVisited, redirectDomain))
 	case RgxExp.MatchString(word): // exp=<domain>
-		hit = false
-		// pass
-	case strings.Contains(word, "="): // unknown modifier
-		hit = false
-	default:
-		hit = true
+		// TODO
+	case !strings.Contains(word, "="): // invalid word (excluding unknown modifiers)
 		res = ResultPermError
+		err = fmt.Errorf("invalid word '%s'", word)
 	}
-	fmt.Printf("%t %#v\n", hit, res)
+	dprint("\t %s -> %#v", word, res)
 	return
 }

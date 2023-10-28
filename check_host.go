@@ -1,4 +1,4 @@
-package main
+package spf
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Result, err error) {
-	fmt.Printf("[DEBUG] calling checkhostinner on %s\n", domain)
+	dprint("calling checkHostInner(%s, %s, %#v)", ip, domain, domainsVisited)
 
 	// Make sure we are not stuck in a loop or bottomless spf search
 	if hasDuplicateDomain(domainsVisited, domain) {
@@ -20,22 +20,21 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 		return
 	}
 
-	records, err := fetchSpfRecords(domain)
-	fmt.Printf("[DEBUG] %#v\n", records)
+	// Get spf records / PermError if err
+	record, err := fetchSpfRecord(domain)
 	if err != nil {
 		return ResultPermError, err
 	}
-	for _, record := range records {
-		words := strings.Split(record, " ")
-		var hit bool
-		for _, word := range words {
-			hit, res, err = checkWord(ip, domain, word, domainsVisited)
-			if hit {
-				return res, err
-			}
-		}
+
+	// Parse spf record to array of results
+	var results []Result
+	words := strings.Split(record, " ")
+	for _, word := range words {
+		res, err = checkWord(ip, domain, word, domainsVisited)
+		results = append(results, res)
 	}
-	res = ResultNone
+
+	res = getDominantResult(results)
 	return
 }
 
@@ -49,6 +48,5 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 // 	res: the Result enum (see README for all possible results)
 // 	err: and error object, only relevant if res = ResultPermError or ResultTempError
 func CheckHost(ip net.IP, domain string) (res Result, err error) {
-	fmt.Printf("[DEBUG] calling checkhost on %s\n", domain)
 	return checkHostInner(ip, domain, []string{})
 }
