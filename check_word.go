@@ -10,23 +10,23 @@ import (
 func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Result, err error) {
 	res = ResultNone
 	switch {
-	case RgxAll.MatchString(word):
+	case RgxAll.MatchString(word): // all
 		res = getQualifierResult(word)
 	case RgxIp4.MatchString(word) ||
 		RgxIp4Prefixed.MatchString(word) ||
 		RgxIp6.MatchString(word) ||
-		RgxIp6Prefixed.MatchString(word):
+		RgxIp6Prefixed.MatchString(word): // ip (any format)
 		ipStr := word[4:]
 		if checkIp(ip, ipStr) {
 			res = getQualifierResult(word)
 		} else {
 			res = ResultNone
 		}
-	case RgxA.MatchString(word):
+	case RgxA.MatchString(word): // a
 		if checkA(ip, domain, -1) {
 			res = getQualifierResult(word)
 		}
-	case RgxAPrefix.MatchString(word):
+	case RgxAPrefix.MatchString(word): // a/<prefix>
 		var prefix int
 		prefix, err = strconv.Atoi(word[3:])
 		if err != nil {
@@ -79,7 +79,7 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Res
 			res = getQualifierResult(word)
 		}
 	case RgxExists.MatchString(word): // exists:<domain>
-		domain = word[7:]
+		domain = word[8:]
 		if checkExists(domain) {
 			res = getQualifierResult(word)
 		}

@@ -1,5 +1,5 @@
 # Go SPF
-A sender policy framework module for go. Based off rules at http://www.open-spf.org/SPF_Record_Syntax/. 100% test coverage.
+A super simple sender policy framework module for go. Based off rules at http://www.open-spf.org/SPF_Record_Syntax/.
 
 # Example usage
 ```go
@@ -9,30 +9,29 @@ import (
 )
 
 senderIp := net.ParseIP("0.0.0.0")
-senderDomain := "google.com"
+senderDomain := "example.com"
 
-// CheckHost is the only exported function in the module:
 result, err := spf.CheckHost(senderIp, senderDomain)
 
 switch result {
     case spf.ResultPass:
-        fmt.Println("Passed spf check! Accept mail from sender.")
+        fmt.Println("accept")
     case spf.ResultFail:
-        fmt.Println("Failed spf check! Reject mail from sender.")
+        fmt.Println("reject")
     case spf.ResultSoftFail:
-        fmt.Println("Soft failed spf check! Reject mail from sender or mark as spam.")
+        fmt.Println("accept but mark")
     case spf.ResultNeutral:
-        fmt.Println("Neutral spf check result! Reject mail from sender or mark as spam.")
+        fmt.Println("accept")
     case spf.ResultNone:
-        fmt.Println("This means there was no spf record for the domain. Reject mail from this sender.")
+        fmt.Println("accept")
     case ResultPermError:
-        fmt.Println("This probably means the spf record for domain was invalid. Reject mail from this sender.")
+        fmt.Println("unspecified")
         fmt.Println(err)
     case ResultTempError:
-        fmt.Println("This is a legacy thing. Just treat this as a perm error if you don't know.")
+        fmt.Println("accept or reject")
         fmt.Println(err)
     default:
-        fmt.Println(err)
+        panic(err)
 }
 ```
 

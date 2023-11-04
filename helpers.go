@@ -55,8 +55,8 @@ func hasDuplicateDomain(domainsVisited []string, domain string) bool {
 	return false
 }
 
+///////////// DEV ONLY /////////////
 // This is just a way to debug print
-// DEV ONLY
 var shouldDebugPrint bool = false
 
 func dprint(msg string, fmtArgs ...interface{}) {

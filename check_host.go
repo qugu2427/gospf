@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const IncludeDepthLimit int = 100
+
 func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Result, err error) {
 	dprint("calling checkHostInner(%s, %s, %#v)", ip, domain, domainsVisited)
 
@@ -14,7 +16,7 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 		res = ResultPermError
 		err = fmt.Errorf("spf record loop detected over domain %s, likely circular redirect or include in the domains spf records", domain)
 		return
-	} else if len(domainsVisited) > 100 {
+	} else if len(domainsVisited) > IncludeDepthLimit {
 		res = ResultPermError
 		err = fmt.Errorf("spf record depth limit reached over domain %s, likely too many includes or redirects in the domains spf records", domain)
 		return
