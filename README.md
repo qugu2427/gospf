@@ -47,3 +47,4 @@ func main() {
 # Things to keep in mind
 - The security of SPF relies on the sender domain having a correctly formatted spf record.
 - Spf is NOT the only measure needed verify an email.
+- There are other spf modules in go, but most of the ones I've seen are overly complicated, messy, incomplete, and untested.
