@@ -32,56 +32,130 @@ func TestCheckWord(t *testing.T) {
 		// ip4
 		{ // positive specific ip4
 			"74.6.231.20",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip4:74.6.231.20",
 			ResultPass,
 		},
 		{ // negative specific ip4
 			"1.2.3.4",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip4:74.6.231.20",
 			ResultNone,
 		},
 		{ // positive ranged ip4
 			"74.6.128.10",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip4:74.6.231.20/16",
 			ResultPass,
 		},
 		{ // negative ranged ip4
 			"74.3.128.10",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip4:74.6.231.20/16",
+			ResultNone,
+		},
+		{ // bs ip4
+			"999.999.999.999",
+			"irrelevant.com",
+			"ip4:74.6.231.20/16",
+			ResultNone,
+		},
+		{ // bs ip4 word
+			"74.6.128.10",
+			"irrelevant.com",
+			"ip4:999.999.999.999/99",
 			ResultNone,
 		},
 
 		// ip6
 		{ // positive specific ip6
 			"2001:4998:24:120d::1:1",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip6:2001:4998:24:120d::1:1",
 			ResultPass,
 		},
 		{ // negative specific ip6
 			"2001:4998:25:120d::1:1",
-			"yahoo.com",
+			"irrelevant.com",
 			"ip6:2001:4998:24:120d::1:1",
 			ResultNone,
 		},
-		// TODO positive ranged ip6
-		// TODO negative ranged ip6
+		{ // positive ranged ip6
+			"2001:0db8:85a3:0000:0000:8a2e:0370:7399",
+			"irrelevant.com",
+			"ip6:2001:0db8:85a3:0000:0000:8a2e:0370:7334/64",
+			ResultPass,
+		},
+		{ // negative ranged ip6
+			"2001:0db8:86a3:0000:0000:8a2e:0370:7334",
+			"irrelevant.com",
+			"ip6:2001:0db8:85a3:0000:0000:8a2e:0370:7334/64",
+			ResultNone,
+		},
+		{ // bs ip6
+			"fffffffffff:::::::::",
+			"irrelevant.com",
+			"ip6:2001:0db8:85a3:0000:0000:8a2e:0370:7334/64",
+			ResultNone,
+		},
+		{ // bs ip6 word
+			"2001:4998:24:120d::1:1",
+			"irrelevant.com",
+			"ip6:fffffffffff:::::::::/64",
+			ResultNone,
+		},
 
-		// a
-		// TODO positive implied a
-		// TODO negative implied a
-		// TODO positive ranged a
-		// TODO negative ranged a
-		// TODO positive domain a
-		// TODO negative domain a
-		// TODO positive domain ranged a
-		// TODO negative domain ranged a
+		// a (depend on yahoo.com)
+		{ // positive implied a
+			"74.6.231.20",
+			"yahoo.com",
+			"a",
+			ResultPass,
+		},
+		{ // negative implied a
+			"74.6.231.30",
+			"yahoo.com",
+			"a",
+			ResultNone,
+		},
+		{ // positive ranged a
+			"74.6.231.30",
+			"yahoo.com",
+			"a/24",
+			ResultPass,
+		},
+		{ // negative ranged a
+			"74.6.331.30",
+			"yahoo.com",
+			"a/24",
+			ResultNone,
+		},
+		{ // positive domain a
+			"74.6.231.20",
+			"irrelevant.com",
+			"a:yahoo.com",
+			ResultPass,
+		},
+		{ // negative domain a
+			"74.6.231.30",
+			"irrelevant.com",
+			"a:yahoo.com",
+			ResultNone,
+		},
+		{ // positive domain ranged a
+			"74.6.0.0",
+			"irrelevant.com",
+			"a:yahoo.com/16",
+			ResultPass,
+		},
+		{ // negative domain ranged a
+			"74.0.0.0",
+			"irrelevant.com",
+			"a:yahoo.com/16",
+			ResultNone,
+		},
 
-		// ptr
+		// ptr (these tests depend on yahoo.com)
 		{ // positive implied ptr
 			"74.6.231.20",
 			"yahoo.com",
@@ -107,7 +181,9 @@ func TestCheckWord(t *testing.T) {
 			ResultNone,
 		},
 
-		// exists
+		// TODO mx
+
+		// exists (these tests depend on google.com existing)
 		{ // positive exists
 			"1.2.3.4",
 			"irrelevant",
@@ -136,7 +212,7 @@ func TestCheckWord(t *testing.T) {
 		},
 	}
 	for _, expected := range tests {
-		res, _ := checkWord(
+		res, err := checkWord(
 			net.ParseIP(expected.ip),
 			expected.domain,
 			expected.word,
@@ -144,12 +220,13 @@ func TestCheckWord(t *testing.T) {
 		)
 		if res != expected.res {
 			t.Fatalf(
-				"checkWord(%s, %s, %s).res=%s, expected %s",
+				"checkWord(%s, %s, %s).res=%s, expected %s (err=%s)",
 				expected.ip,
 				expected.domain,
 				expected.word,
 				resultToStr(res),
 				resultToStr(expected.res),
+				err,
 			)
 		}
 	}

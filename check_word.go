@@ -28,14 +28,14 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Res
 		}
 	case RgxAPrefix.MatchString(word): // a/<prefix>
 		var prefix int
-		prefix, err = strconv.Atoi(word[3:])
+		prefix, err = strconv.Atoi(word[2:])
 		if err != nil {
 			res = ResultPermError
 		} else if checkA(ip, domain, prefix) {
 			res = getQualifierResult(word)
 		}
 	case RgxADomain.MatchString(word): // a:<domain>
-		domain := word[3:]
+		domain := word[2:]
 		if checkA(ip, domain, -1) {
 			res = getQualifierResult(word)
 		}
@@ -45,7 +45,7 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Res
 		prefix, err = strconv.Atoi(word[slashIndex+1:])
 		if err != nil {
 			res = ResultPermError
-		} else if checkA(ip, word[3:slashIndex], prefix) {
+		} else if checkA(ip, word[2:slashIndex], prefix) {
 			res = getQualifierResult(word)
 		}
 	case RgxMx.MatchString(word): // mx
@@ -79,7 +79,7 @@ func checkWord(ip net.IP, domain, word string, domainsVisited []string) (res Res
 			res = getQualifierResult(word)
 		}
 	case RgxExists.MatchString(word): // exists:<domain>
-		domain = word[8:]
+		domain = word[7:]
 		if checkExists(domain) {
 			res = getQualifierResult(word)
 		}
