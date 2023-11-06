@@ -156,6 +156,7 @@ func TestCheckA(t *testing.T) {
 }
 
 // These dont always pass since mx changes alot
+// FIXME BUG
 // func TestCheckMx(t *testing.T) {
 // 	type expected struct {
 // 		ip     string

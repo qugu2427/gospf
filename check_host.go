@@ -6,7 +6,8 @@ import (
 	"strings"
 )
 
-const IncludeDepthLimit int = 100
+// The amount of spf includes or redirects allowed before an error will be thrown
+var IncludeDepthLimit int = 100
 
 func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Result, err error) {
 	dprint("calling checkHostInner(%s, %s, %#v)", ip, domain, domainsVisited)
@@ -43,12 +44,14 @@ func checkHostInner(ip net.IP, domain string, domainsVisited []string) (res Resu
 // Checks that a sender ip has permission to send mail from a domain
 //
 // Parameters:
-// 	ip: the net.IP of the sender (either ip6 or ip4)
-// 	domain: the claimed domain of the sender (ex 'colorado.edu' if mail is from 'bob@colorado.edu )
+//
+//	ip: the net.IP of the sender (either ip6 or ip4)
+//	domain: the claimed domain of the sender (ex 'colorado.edu' if mail is from 'bob@colorado.edu )
 //
 // Returns:
-// 	res: the Result enum (see README for all possible results)
-// 	err: and error object, only relevant if res = ResultPermError or ResultTempError
+//
+//	res: the Result enum (see README for all possible results)
+//	err: and error object, only relevant if res = ResultPermError or ResultTempError
 func CheckHost(ip net.IP, domain string) (res Result, err error) {
 	return checkHostInner(ip, domain, []string{})
 }
