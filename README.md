@@ -48,3 +48,4 @@ func main() {
 - The security of SPF relies on the sender domain having a correctly formatted spf record.
 - Spf is NOT the only measure needed verify an email.
 - There are other spf modules in go, but most of the ones I've seen are overly complicated, messy, incomplete, and untested.
+- The 'exp' modifier is ignored & not handled by this module because no one uses it and it does not add anything to the authentication. SPF records with exp will work fine, you will just have to go get the explanation domain yourself.
