@@ -1,11 +1,11 @@
 # Go Sender Policy Framework (rfc7208) Module
-A golang sender policy framework verifier module. Designed to be fully compliant with [rfc7208](https://www.rfc-editor.org/rfc/rfc7208).
+A golang sender policy framework verifier module. Designed to be fully compliant with [rfc7208](https://www.rfc-editor.org/rfc/rfc7208). Supports all mechanisms and all modifiers.
 
 ## Example Usage
 ```
 go get -u github.com/qugu2427/gospf
 ```
-```
+```go
 package main
 
 import (
@@ -46,7 +46,7 @@ func main() {
 ```
 ** WORK IN PROGRESS **
 
-## Known RFC Violation
+## Known RFC Violations
 Below is a list of ways which this module is known to violate [rfc7208](https://www.rfc-editor.org/rfc/rfc7208). Non of these issues are major.
 
 #### 1. The h (HELO/EHLO) macro
