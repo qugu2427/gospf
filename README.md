@@ -28,31 +28,49 @@ func main() {
 	case spf.ResultFail:
 		fmt.Println("reject")
 	case spf.ResultSoftFail:
-		fmt.Println("accept but mark")
+		fmt.Println("reject or mark as spam")
 	case spf.ResultNeutral:
-		fmt.Println("accept")
+		// The sender's spf record made no judgement
+		fmt.Println("reject or perform other non spf checks")
 	case spf.ResultNone:
-		fmt.Println("accept")
+		// The sender has no spf record
+		fmt.Println("reject or perform other non spf checks")
 	case spf.ResultPermError:
-		fmt.Println("unspecified")
+		// The sender has an invalid spf record
+		fmt.Println("reject and log error")
 		fmt.Println(err)
 	case spf.ResultTempError:
-		fmt.Println("accept or reject")
+		// Network error while evluating record
+		fmt.Println("reject and log error")
 		fmt.Println(err)
 	default:
 		panic(err)
 	}
 }
 ```
-** WORK IN PROGRESS **
 
-## Known RFC Violations
-Below is a list of ways which this module is known to violate [rfc7208](https://www.rfc-editor.org/rfc/rfc7208). Non of these issues are major.
-
-#### 1. The h (HELO/EHLO) macro
-This issue only applies when the `h` macro is used AND the `helo` domain does not match the `mailfrom` domain. (this is rare)
-
-[section 7.2 of rfc7208](https://www.rfc-editor.org/rfc/rfc7208#section-7.2) allows the `h` macro to substitute in the `helo/ehlo` domain. Unfortuently, due to an oversight in the rfc, the `helo` domain is not in scope of `CheckHost()` when called on `mailfrom`. To "fix" this issue, we treat the `h` macro the same as a `d` macro. This "fix" will assumes that the helo and mailfrom domains match.
-
-#### 2. Does not support `exp=` modifier
-A secondary function is planned to get the explanation if necessary.
+# Support
+- Mechanisms
+	* `all` ✅
+	* `include` ✅
+	* `a` ✅
+	* `mx` ✅
+	* `ptr` ✅
+	* `ip4` ✅
+	* `ip6` ✅
+	* `exists` ✅
+- Modifiers
+	* `redirect` ✅
+	* `exp` ❌ (no plan to support this since no one uses it)
+	* Unknown modifiers will be ignored.
+- Macros
+	* `s` ✅
+	* `l` ✅
+	* `o` ✅
+	* `d` ✅
+	* `i` ✅
+	* `p` ✅
+	* `v` ✅
+	* `h` ⚠️ (will be treated the same as `d`)
+		- [section 7.2 of rfc7208](https://www.rfc-editor.org/rfc/rfc7208#section-7.2) allows the `h` macro to substitute in the `helo/ehlo` domain. Unfortuently, due to an oversight in the rfc, the `helo` domain is not always in scope of `CheckHost()` when called on `mailfrom`. To "fix" this issue, we treat the `h` macro the same as a `d` macro. This "fix" will assumes that the helo and mailfrom domains match. This is an issue only in rare cases when the `h` macro is used AND the `helo` domain does not match the `mailfrom` domain.
+		
