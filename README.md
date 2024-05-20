@@ -1,5 +1,5 @@
 # Go Sender Policy Framework (rfc7208) Module
-A golang sender policy framework verifier module. Designed to be fully compliant with [rfc7208](https://www.rfc-editor.org/rfc/rfc7208). Supports all mechanisms and all modifiers.
+A golang sender policy framework verifier module. Designed to be compliant with [rfc7208](https://www.rfc-editor.org/rfc/rfc7208).
 
 ## Example Usage
 ```
