@@ -15,8 +15,6 @@ var (
 )
 
 func applyMacros(word string, s *session) (macroWord string, err error) {
-	// FIXME mabye
-	// not a big deal but stray % should be a perm error
 	word = strings.ReplaceAll(word, "%%", "%")
 	word = strings.ReplaceAll(word, "%_", " ")
 	word = strings.ReplaceAll(word, "%-", "%20")
@@ -32,6 +30,8 @@ func applyMacros(word string, s *session) (macroWord string, err error) {
 	return word, nil
 }
 
+// trims to right sections of a '.' delimenated word
+// e.x: one.two.three, 2 --> two.three
 func macroTrim(word string, rightTrim int) (tword string) {
 	chars := []rune(word)
 	l := len(chars) - 1
@@ -47,6 +47,8 @@ func macroTrim(word string, rightTrim int) (tword string) {
 	return
 }
 
+// reverses a '.' deliminated word
+// e.x: one.two.three -> three.two.one
 func macroReverse(word string) (rword string) {
 	subWord := ""
 	for _, char := range word {
@@ -62,6 +64,7 @@ func macroReverse(word string) (rword string) {
 }
 
 func parseMacro(macroBody string, s *session) (word string, err error) {
+	macroBody = strings.ToLower(macroBody)
 	if !macroBodyRgx.MatchString(macroBody) {
 		return "", fmt.Errorf("invalid macro body `%s`", macroBody)
 	}

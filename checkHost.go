@@ -29,7 +29,7 @@ func CheckHost(ip net.IP, domain, sender string) (res Result, err error) {
 
 	senderSplit := strings.Split(sender, "@")
 	if len(senderSplit) != 2 || len(senderSplit[1]) < 1 {
-		return ResultPermError, fmt.Errorf("invalid sender '%s' should be in form 'local@domain'", sender)
+		return ResultPermError, fmt.Errorf("invalid sender '%s', should be in form 'local@domain'", sender)
 	}
 
 	// "If the <sender> has no local-part, substitute the string 'postmaster' for the local-part"
