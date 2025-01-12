@@ -1,4 +1,6 @@
 # Go Sender Policy Framework (rfc7208) Module
+![Test](https://github.com/qugu2427/gospf/actions/workflows/test.yml/badge.svg)
+
 A golang sender policy framework verifier module. Designed to be compliant with [rfc7208](https://www.rfc-editor.org/rfc/rfc7208).
 
 ## Example Usage
