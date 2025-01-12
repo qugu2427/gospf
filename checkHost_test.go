@@ -91,8 +91,8 @@ func TestCheckHost(t *testing.T) {
 		// DNS errors (such as non-existent domain) give TempError
 		{
 			net.ParseIP("0.0.0.0"),
-			"fakedomain.xyz",
-			"test@fakedomain.xyz",
+			"fakedomain.xyzzz",
+			"test@fakedomain.xyzzz",
 			ResultTempError,
 			true,
 		},
