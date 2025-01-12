@@ -1,9 +1,10 @@
 module spf
 
-go 1.18
+go 1.23.4
+
+require github.com/foxcpp/go-mockdns v1.1.0
 
 require (
-	github.com/foxcpp/go-mockdns v1.1.0
 	github.com/miekg/dns v1.1.59 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
